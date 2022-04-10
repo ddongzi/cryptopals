@@ -110,8 +110,6 @@ def find_block_size():
 
 def Byte_at_a_time_ECB_decryption(unknown_str):
     
-
-    
     ct=padding_then_ECB_encrypt(unknown_str)
 
     # goal :get unknown_str=**********
