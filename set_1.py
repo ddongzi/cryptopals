@@ -98,8 +98,6 @@ def Break_repeating_key_XOR():
     with open('6.txt',mode='r') as fp:
         s=fp.read()
         s=b64decode(s)
-
-
     #guess key size.
     c_s=[]
     for key_size in range(2,40):
@@ -146,7 +144,15 @@ def Break_repeating_key_XOR():
     
 
         
-        
+
+    
+    
+    
+    
+    
+    
+    
+    
     
 
     
