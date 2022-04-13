@@ -23,7 +23,7 @@ def Convert_hex_to_base64(hex_str):
     base64_str=b64encode(s)
     return base64_str
 
-def Fixed_XOR(a,b):
+def XOR(a,b):
 
     res=bytes(x^y for x,y in zip(a,b) )       
     return res
