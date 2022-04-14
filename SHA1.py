@@ -38,6 +38,10 @@ class Hash(object):
         format_str = '{:0' + str(2 * self.digest_size) + 'x}'
         return format_str.format(int.from_bytes(raw, byteorder='big'))
 
+    def bytedigest(self):
+        digest = self.digest()
+        raw = digest.to_bytes(self.digest_size, byteorder=self.byteorder)
+        return raw
 
 def leftshift(x, c):
     """ Left shift the number x by c bytes."""
@@ -152,16 +156,8 @@ class SHA1(Hash):
     def digest(self):
         return sum(leftshift(x, 32 * i) for i, x in enumerate(self.hash_pieces[::-1]))
 
+    def hash(self,data):
+        self.update(data)
+        return self.bytedigest()
 
 
-def hash_SHA1(data):
-    """ Shortcut function to directly receive the hex digest from SHA1(data)."""
-    h = SHA1()
-    if isinstance(data, str):
-        print("aa")
-        data = bytes(data, encoding='utf8')
-    h.update(data)
-    return h.hexdigest()
-
-
-hash_SHA1(b'duck'*10)

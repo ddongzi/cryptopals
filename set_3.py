@@ -224,16 +224,7 @@ def MT19937_Stream_Cipher_encrypt(pt):
         keystream+=MT19937.extract_number().to_bytes(4,byteorder='little')
     ct=xor(pt,keystream)
     print(ct)
-    
-MT19937_Stream_Cipher_encrypt(b'AAAAAAAAAAAAAA')
-            
-            
-            
-    
-       
-    
-    
-    
+
     
     
     

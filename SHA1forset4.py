@@ -195,7 +195,8 @@ def sha1padding(s,message_added_length=None):
 
     return bytes(data)
 
-# 29:S(k,m)=H(k||m) length extension attack.
+# 29:Break a SHA-1 keyed MAC using length extension
+# S(k,m)=H(k||m) length extension attack.
 def  SHA1_MAC_length_extension_attack():
     # (K||m||p1)->( (k||m||p1) || w) for any w without k
 
@@ -212,3 +213,5 @@ def  SHA1_MAC_length_extension_attack():
     forgemac=hash_SHA1(b';admin=true',hashpeices,keysize+len(original_msg)+len(pad1))
     print("forge: ",forgemac)
     print("real: ",hash_SHA1(goalmsg))
+
+
