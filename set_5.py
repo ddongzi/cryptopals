@@ -6,12 +6,13 @@ Created on 2022/4/13 下午9:25
 @author: dong
 """
 import gmpy2
-from gmpy2 import mpz, random_state, mpz_random, powmod
+from gmpy2 import mpz, random_state, mpz_random, powmod, mul, add, to_binary, sub
 from random import randint
 from Cryptodome.Cipher import AES
-from Cryptodome.Hash import SHA1
+from Cryptodome.Hash import SHA1, SHA256, HMAC
 from os import urandom
 from set_3 import PKCS7_padding, PKCS7_padding_validation
+from math import pow
 
 
 # 33:Implement Diffie-Hellman
@@ -86,11 +87,73 @@ def DH_MITM_attack():
 
     # M->A:
     ptm = AES.new(SHA1.new(gmpy2.to_binary(m_sb)).digest()[:16], AES.MODE_CBC, ivb).decrypt(ctb)
-    isvalid, mmsg = PKCS7_padding_validation(ptm
+    isvalid, mmsg = PKCS7_padding_validation(ptm)
     print("M receive,dec: ", mmsg)
     ivm = urandom(16)
     ctm = AES.new(SHA1.new(gmpy2.to_binary(m_sa)).digest()[:16], AES.MODE_CBC, ivm).encrypt(PKCS7_padding(mmsg))
     print("M relay :", ivm + ctm, "msg:", mmsg)
 
 
-DH_MITM_attack()
+# 36:
+def SRP(N, g, k, p):
+    N, g, k, p = mpz(N), mpz(g), mpz(k), b'pwd'
+    rs = random_state()
+    rn = 10
+
+    # C:register
+    print("C: register.\n----")
+    s = mpz_random(rs, rn)
+    s = to_binary(s)
+    hash_c = SHA256.new(s + p)
+    x = mpz(hash_c.hexdigest(), 16)
+    v = powmod(g, x, N)
+
+    # C:
+    a = mpz_random(rs, rn)
+
+    # C->S:
+    I = (s, v)
+    A = powmod(g, a, N)
+    print("C: send. I:{},A:{}".format(I, A))
+
+    # S:
+    b = mpz_random(rs, rn)
+    B = add(mul(k, v), powmod(g, b, N))
+    s = I[0]
+    v = I[1]
+    hash_s = SHA256.new(to_binary(A) + to_binary(B))
+    u_s = mpz(hash_s.hexdigest(), 16)
+    Ss = powmod(mul(A, powmod(v, u_s, N)), b, N)
+    Ss = gmpy2.to_binary(Ss)
+    hash_s.update(Ss)
+    Ks = hash_s.hexdigest()
+
+    print("S: get Ks:", Ks)
+
+    # S->C:
+    B = B
+    print("S: send. B:", B)
+
+    # C:
+    hash_c = SHA256.new(gmpy2.to_binary(A) + gmpy2.to_binary(B))
+    u_c = mpz(hash_c.hexdigest(), 16)
+    Sc = powmod(sub(B, mul(k, powmod(g, x, N))), add(a, mul(u_c, x)), N)
+    Sc = gmpy2.to_binary(Sc)
+
+    hash_c.update(Sc)
+    Kc = hash_c.hexdigest()
+    print("C: get Kc: ", Kc)
+
+    # C->S:
+    hmac_c = HMAC.new(hash_c.digest(),s, SHA256)
+    mac = hmac_c.digest()
+
+    # S->C:
+    hmac_s = HMAC.new(hash_s.digest(),s, SHA256)
+    try:
+        hmac_s.verify(mac)
+        print("OK: Kc=Ks")
+    except ValueError:
+        print("No: Kc!=Ks")
+
+
