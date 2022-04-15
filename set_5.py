@@ -6,7 +6,7 @@ Created on 2022/4/13 下午9:25
 @author: dong
 """
 import gmpy2
-from gmpy2 import mpz, random_state, mpz_random, powmod, mul, add, to_binary, sub
+from gmpy2 import mpz, random_state, mpz_random, powmod, mul, add, to_binary, sub, next_prime, invert,mod,root
 from random import randint
 from Cryptodome.Cipher import AES
 from Cryptodome.Hash import SHA1, SHA256, HMAC
@@ -112,9 +112,10 @@ def SRP(N, g, k, p):
     a = mpz_random(rs, rn)
 
     # C->S:
+    userid = ''
     I = (s, v)
     A = powmod(g, a, N)
-    print("C: send. I:{},A:{}".format(I, A))
+    print("C: send. userId:{}, I:{},A:{}".format(userid, I, A))
 
     # S:
     b = mpz_random(rs, rn)
@@ -135,7 +136,7 @@ def SRP(N, g, k, p):
     print("S: send. B:", B)
 
     # C:
-    hash_c = SHA256.new(gmpy2.to_binary(A) + gmpy2.to_binary(B))
+    hash_c = SHA256.new(to_binary(A) + to_binary(B))
     u_c = mpz(hash_c.hexdigest(), 16)
     Sc = powmod(sub(B, mul(k, powmod(g, x, N))), add(a, mul(u_c, x)), N)
     Sc = gmpy2.to_binary(Sc)
@@ -145,11 +146,11 @@ def SRP(N, g, k, p):
     print("C: get Kc: ", Kc)
 
     # C->S:
-    hmac_c = HMAC.new(hash_c.digest(),s, SHA256)
+    hmac_c = HMAC.new(hash_c.digest(), s, SHA256)
     mac = hmac_c.digest()
 
     # S->C:
-    hmac_s = HMAC.new(hash_s.digest(),s, SHA256)
+    hmac_s = HMAC.new(hash_s.digest(), s, SHA256)
     try:
         hmac_s.verify(mac)
         print("OK: Kc=Ks")
@@ -157,3 +158,34 @@ def SRP(N, g, k, p):
         print("No: Kc!=Ks")
 
 
+# 39:
+def RSA():
+    p = 11
+    q = 5
+    N = mul(p, q)
+    phi_N = mul(sub(p, 1), sub(q, 1))
+    e = 3
+    d = invert(e, phi_N)
+    PK = (N, e)
+    SK = (N, d)
+    m = 35
+    c = powmod(m, e, N)
+    pt = powmod(c, d, N)
+    print(pt)
+
+# 40:
+def E3_RSA_Broadcast_attack():
+    N1, N2, N3 = 3 * 5, 11 * 17, 29 * 23
+    N = N1 * N2 * N3
+    m = 8
+    print("m:",m)
+    e = 3
+    c1, c2, c3 = powmod(m, e, N1), powmod(m, e, N2), powmod(m, e, N3)
+    b1, b2, b3 = mpz(N / N1), mpz(N / N2), mpz(N / N3)
+    b1i, b2i, b3i = invert(b1, N1), invert(b2, N2), invert(b3, N3)
+    c = add(add(mul(c1, mul(b1, b1i)),mul(c2, mul(b2, b2i))), mul(c3, mul(b3, b3i)))
+    c=mod(c,N)
+    m=root(c,3)
+    m=mod(m,N)
+    print("find m:",m)
+E3_RSA_Broadcast_attack()
